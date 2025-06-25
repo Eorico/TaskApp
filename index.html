@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow</title>
+    <link rel="stylesheet" href="style/index.css">
+</head>
+<body>
+    <!-- Authentication Container -->
+    <div id="authContainer" class="auth-container">
+        <div class="auth-card">
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+            
+            <!-- Login Form -->
+            <div id="loginForm">
+                <div class="auth-header">
+                    <h1>Welcome to TaskFlow</h1>
+                    <p>Log in to your account</p>
+                </div>
+                <form id="loginFormElement">
+                    <div class="form-group">
+                        <label for="loginEmail">Email</label>
+                        <input type="email" placeholder="user@gmail.com" id="loginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" placeholder="******" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn">Log In</button>
+                </form>
+                <div class="auth-switch">
+                    Don't have an account? <a href="#" id="showRegister">Register</a>
+                </div>
+            </div>
+
+            <!-- Register Form -->
+            <div id="registerForm" class="hidden">
+                <div class="auth-header">
+                    <h1>Join TaskFlow</h1>
+                    <p>Create your account</p>
+                </div>
+                <form id="registerFormElement">
+                    <div class="form-group">
+                        <label for="registerName">Full Name</label>
+                        <input type="text" id="registerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerEmail">Email</label>
+                        <input type="email" id="registerEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">Password</label>
+                        <input type="password" id="registerPassword" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input type="password" id="confirmPassword" required minlength="6">
+                    </div>
+                    <button type="submit" class="btn">Create Account</button>
+                </form>
+                <div class="auth-switch">
+                    Already have an account? <a href="#" id="showLogin">Sign in</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="dashboard">
+        <div class="dashboard-container">
+            <!-- Sidebar -->
+
+            <button id="sidebarToggle" class="sidebar-toggle" aria-label="Open sidebar">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
+
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <div class="logo">
+                        <div class="logo-icon">TF</div>
+                        <span>TaskFlow</span>
+                    </div>
+                </div>
+                
+                <nav class="sidebar-nav">
+                    <a href="#" class="nav-item active" data-view="tasks">
+                         My Tasks
+                    </a>
+                    <a href="#" class="nav-item" data-view="calendar">
+                         Calendar
+                    </a>
+                    <a href="#" class="nav-item" data-view="settings">
+                         Settings
+                    </a>
+                </nav>
+                
+                <div class="sidebar-footer">
+                    <button class="logout-btn" id="dashboardLogout">Logout</button>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Tasks View -->
+                <div id="tasksView" class="view">
+                    <div class="content-header">
+                        <h1>My Tasks</h1>
+                        <p>Manage your daily tasks and stay productive</p>
+                    </div>
+                    <div class="content-body">
+                        <div class="add-task-form">
+                            <div class="task-input-group">
+                                <input type="text" id="taskInput" class="task-input" placeholder="Add a new task..." maxlength="100">
+                                <input type="date" id="taskDueDate" class="task-input date-input">
+                                <select id="taskPriority" class="priority-select">
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                </select>
+                                <button id="addTaskBtn" class="add-task-btn">Add Task</button>
+                            </div>
+                        </div>
+                        <div class="tasks-container" id="tasksContainer">
+                            <!-- Tasks will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calendar View -->
+                <div id="calendarView" class="view hidden">
+                    <div class="content-header">
+                        <h1>Calendar</h1>
+                        <p>View your tasks by due date</p>
+                    </div>
+                    <div class="content-body">
+                        <div class="calendar-container">
+                            <div class="calendar-header">
+                                <h3 id="calendarMonth">January 2024</h3>
+                                <div class="calendar-nav">
+                                    <button id="prevMonth">‹</button>
+                                    <button id="nextMonth">›</button>
+                                </div>
+                            </div>
+                            <div class="calendar-grid" id="calendarGrid">
+                                <!-- Calendar will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings View -->
+                <div id="settingsView" class="view hidden">
+                    <div class="content-header">
+                        <h1>Settings</h1>
+                        <p>Manage your account and preferences</p>
+                    </div>
+                    <div class="content-body">
+                        <div class="settings-section">
+                            <h3>Profile Information</h3>
+                            <form id="profileForm" class="settings-form">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="profileName">Full Name</label>
+                                        <input type="text" id="profileName" class="task-input">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="profileEmail">Email</label>
+                                        <input type="email" id="profileEmail" class="task-input">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-profile">Update Profile</button>
+                            </form>
+                        </div>
+
+                        <div class="settings-section">
+                            <h3>Preferences 🌤️-🌓</h3>
+                            <div class="settings-form">
+                                <div class="form-group">
+                                    <label for="darkModeToggle">Dark Mode</label>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="darkModeToggle">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Task Modal -->
+    <div id="editTaskModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Task</h3>
+                <button class="close-btn" id="closeEditModal">&times;</button>
+            </div>
+            <form id="editTaskForm">
+                <div class="form-group">
+                    <label for="editTaskTitle">Task Title</label>
+                    <input type="text" id="editTaskTitle" class="task-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="editTaskDueDate">Due Date</label>
+                    <input type="date" id="editTaskDueDate" class="task-input">
+                </div>
+                <div class="form-group">
+                    <label for="editTaskPriority">Priority</label>
+                    <select id="editTaskPriority" class="priority-select">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" id="cancelEdit">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="func/index.js"></script>
+</body>
+</html>
