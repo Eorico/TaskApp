@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TaskFlow</title>
     <link rel="stylesheet" href="style/index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
-    <!-- Authentication Container -->
+   <!-- Authentication Container -->
     <div id="authContainer" class="auth-container">
         <div class="auth-card">
             <div class="error-message" id="errorMessage"></div>
@@ -17,21 +18,21 @@
             <div id="loginForm">
                 <div class="auth-header">
                     <h1>Welcome to TaskFlow</h1>
-                    <p>Log in to your account</p>
+                    <p>Sign in to your account</p>
                 </div>
                 <form id="loginFormElement">
                     <div class="form-group">
                         <label for="loginEmail">Email</label>
-                        <input type="email" placeholder="user@gmail.com" id="loginEmail" required>
+                        <input type="email" placeholder="Ex: user@gmail.com" id="loginEmail" required>
                     </div>
                     <div class="form-group">
                         <label for="loginPassword">Password</label>
-                        <input type="password" placeholder="******" id="loginPassword" required>
+                        <input type="password" placeholder="********" id="loginPassword" required>
                     </div>
-                    <button type="submit" class="btn">Log In</button>
+                    <button type="submit" class="btn">Sign In</button>
                 </form>
                 <div class="auth-switch">
-                    Don't have an account? <a href="#" id="showRegister">Register</a>
+                    Don't have an account? <a href="#" id="showRegister">Sign up</a>
                 </div>
             </div>
 
@@ -44,19 +45,19 @@
                 <form id="registerFormElement">
                     <div class="form-group">
                         <label for="registerName">Full Name</label>
-                        <input type="text" id="registerName" required>
+                        <input type="text" placeholder="Ex: Bart Simpson" id="registerName" required>
                     </div>
                     <div class="form-group">
                         <label for="registerEmail">Email</label>
-                        <input type="email" id="registerEmail" required>
+                        <input type="email" placeholder="Ex: user@gmail.com" id="registerEmail" required>
                     </div>
                     <div class="form-group">
                         <label for="registerPassword">Password</label>
-                        <input type="password" id="registerPassword" required minlength="6">
+                        <input type="password" placeholder="********" id="registerPassword" required minlength="6">
                     </div>
                     <div class="form-group">
                         <label for="confirmPassword">Confirm Password</label>
-                        <input type="password" id="confirmPassword" required minlength="6">
+                        <input type="password" placeholder="********" id="confirmPassword" required minlength="6">
                     </div>
                     <button type="submit" class="btn">Create Account</button>
                 </form>
@@ -70,31 +71,31 @@
     <!-- Dashboard -->
     <div id="dashboard" class="dashboard">
         <div class="dashboard-container">
-            <!-- Sidebar -->
-
-            <button id="sidebarToggle" class="sidebar-toggle" aria-label="Open sidebar">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
-            </button>
-
+            <!-- Desktop Sidebar -->
             <div class="sidebar" id="sidebar">
                 <div class="sidebar-header">
-                    <div class="logo">
-                        <div class="logo-icon">TF</div>
+                    <div class="logo" onclick="triggerLogoUpload()">
+                        <div class="logo-icon" id="logoIcon">
+                            <img id="logoImage" class="logo-image hidden" alt="Logo">
+                            <span id="logoText">TF</span>
+                            <input type="file" id="logoUpload" class="logo-upload" accept="image/*" onchange="handleLogoUpload(event)">
+                            <div class="logo-overlay">
+                                <span>Upload</span>
+                            </div>
+                        </div>
                         <span>TaskFlow</span>
                     </div>
                 </div>
                 
                 <nav class="sidebar-nav">
                     <a href="#" class="nav-item active" data-view="tasks">
-                         My Tasks
+                        <i class="fa-solid fa-list-check"></i> My Tasks
                     </a>
                     <a href="#" class="nav-item" data-view="calendar">
-                         Calendar
+                        <i class="fa-solid fa-calendar-days"></i> Calendar
                     </a>
                     <a href="#" class="nav-item" data-view="settings">
-                         Settings
+                        <i class="fa-solid fa-gear"></i> Settings
                     </a>
                 </nav>
                 
@@ -105,6 +106,43 @@
 
             <!-- Main Content -->
             <div class="main-content">
+                <!-- Mobile Header -->
+                <div class="mobile-header">
+                    <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <div class="mobile-logo">
+                        <div class="logo-icon">
+                            <img id="mobileLogoImage" class="logo-image hidden" alt="Logo">
+                            <span id="mobileLogoText">TF</span>
+                        </div>
+                        <span>TaskFlow</span>
+                    </div>
+                </div>
+
+                <!-- Mobile Navigation -->
+                <div class="mobile-nav" id="mobileNav">
+                    <div class="mobile-nav-content">
+                        <div class="mobile-nav-items">
+                            <a href="#" class="mobile-nav-item active" data-view="tasks">
+                                <i class="fa-solid fa-list-check"></i> My Tasks
+                            </a>
+                            <a href="#" class="mobile-nav-item" data-view="calendar">
+                                <i class="fa-solid fa-calendar-days"></i> Calendar
+                            </a>
+                            <a href="#" class="mobile-nav-item" data-view="settings">
+                                <i class="fa-solid fa-gear"></i> Settings
+                            </a>
+                        </div>
+                        <div class="mobile-logout">
+                            <button class="mobile-logout-btn" id="mobileLogout">Logout</button>
+                        </div>
+                    </div>
+                    <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+                </div>
+
                 <!-- Tasks View -->
                 <div id="tasksView" class="view">
                     <div class="content-header">
@@ -112,14 +150,43 @@
                         <p>Manage your daily tasks and stay productive</p>
                     </div>
                     <div class="content-body">
+                        <!-- Search and Filter Section -->
+                        <div class="search-filter-section">
+                            <div class="search-filter-row">
+                                <input type="text" id="searchInput" class="search-input" placeholder="Search tasks...">
+                                <select id="priorityFilter" class="filter-select">
+                                    <option value="">All Priorities</option>
+                                    <option value="high">High Priority</option>
+                                    <option value="medium">Medium Priority</option>
+                                    <option value="low">Low Priority</option>
+                                </select>
+                                <select id="statusFilter" class="filter-select">
+                                    <option value="">All Status</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="overdue">Overdue</option>
+                                </select>
+                                <select id="dateFilter" class="filter-select">
+                                    <option value="">All Dates</option>
+                                    <option value="today">Due Today</option>
+                                    <option value="week">This Week</option>
+                                    <option value="month">This Month</option>
+                                </select>
+                                <button id="clearFilters" class="clear-filters-btn">Clear</button>
+                            </div>
+                            <div class="filter-results" id="filterResults">
+                                Showing all tasks
+                            </div>
+                        </div>
+
                         <div class="add-task-form">
                             <div class="task-input-group">
                                 <input type="text" id="taskInput" class="task-input" placeholder="Add a new task..." maxlength="100">
                                 <input type="date" id="taskDueDate" class="task-input date-input">
                                 <select id="taskPriority" class="priority-select">
-                                    <option value="low">Least Important</option>
-                                    <option value="medium">Important</option>
-                                    <option value="high">Most Important</option>
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
                                 </select>
                                 <button id="addTaskBtn" class="add-task-btn">Add Task</button>
                             </div>
@@ -177,7 +244,7 @@
                         </div>
 
                         <div class="settings-section">
-                            <h3>Preferences 🌤️-🌓</h3>
+                            <h3>Preferences</h3>
                             <div class="settings-form">
                                 <div class="form-group">
                                     <label for="darkModeToggle">Dark Mode</label>

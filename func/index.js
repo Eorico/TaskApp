@@ -1,47 +1,151 @@
+// Database-like structure
+class TaskFlowDB {
+    constructor() {
+        this.users = this.getUsers();
+        this.tasks = this.getTasks();
+        this.userProfiles = this.getUserProfiles();
+    }
+
+    // Users table
+    getUsers() {
+        return JSON.parse(localStorage.getItem('taskflow_users') || '[]');
+    }
+
+    saveUsers() {
+        localStorage.setItem('taskflow_users', JSON.stringify(this.users));
+    }
+
+    createUser(userData) {
+        const user = {
+            id: Date.now(),
+            ...userData,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        this.users.push(user);
+        this.saveUsers();
+        return user;
+    }
+
+    getUserByEmail(email) {
+        return this.users.find(user => user.email === email);
+    }
+
+    updateUser(userId, updates) {
+        const userIndex = this.users.findIndex(user => user.id === userId);
+        if (userIndex !== -1) {
+            this.users[userIndex] = {
+                ...this.users[userIndex],
+                ...updates,
+                updatedAt: new Date().toISOString()
+            };
+            this.saveUsers();
+            return this.users[userIndex];
+        }
+        return null;
+    }
+
+    // Tasks table
+    getTasks() {
+        return JSON.parse(localStorage.getItem('taskflow_tasks') || '[]');
+    }
+
+    saveTasks() {
+        localStorage.setItem('taskflow_tasks', JSON.stringify(this.tasks));
+    }
+
+    createTask(userId, taskData) {
+        const task = {
+            id: Date.now(),
+            userId: userId,
+            ...taskData,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        this.tasks.push(task);
+        this.saveTasks();
+        return task;
+    }
+
+    getUserTasks(userId) {
+        return this.tasks.filter(task => task.userId === userId);
+    }
+
+    updateTask(taskId, updates) {
+        const taskIndex = this.tasks.findIndex(task => task.id === taskId);
+        if (taskIndex !== -1) {
+            this.tasks[taskIndex] = {
+                ...this.tasks[taskIndex],
+                ...updates,
+                updatedAt: new Date().toISOString()
+            };
+            this.saveTasks();
+            return this.tasks[taskIndex];
+        }
+        return null;
+    }
+
+    deleteTask(taskId) {
+        this.tasks = this.tasks.filter(task => task.id !== taskId);
+        this.saveTasks();
+    }
+
+    // User profiles table
+    getUserProfiles() {
+        return JSON.parse(localStorage.getItem('taskflow_profiles') || '[]');
+    }
+
+    saveUserProfiles() {
+        localStorage.setItem('taskflow_profiles', JSON.stringify(this.userProfiles));
+    }
+
+    getUserProfile(userId) {
+        return this.userProfiles.find(profile => profile.userId === userId);
+    }
+
+    updateUserProfile(userId, profileData) {
+        const profileIndex = this.userProfiles.findIndex(profile => profile.userId === userId);
+        if (profileIndex !== -1) {
+            this.userProfiles[profileIndex] = {
+                ...this.userProfiles[profileIndex],
+                ...profileData,
+                updatedAt: new Date().toISOString()
+            };
+        } else {
+            this.userProfiles.push({
+                userId: userId,
+                ...profileData,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            });
+        }
+        this.saveUserProfiles();
+    }
+}
+
 // Application State
 let currentUser = null;
 let tasks = [];
+let filteredTasks = [];
 let currentView = 'tasks';
 let currentDate = new Date();
 let editingTaskId = null;
+let db = new TaskFlowDB();
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
     checkAuthStatus();
     setupEventListeners();
-    setupSidebarToggle();
     initializeDarkMode();
 });
 
 // Check authentication status
 function checkAuthStatus() {
-    const savedUser = localStorage.getItem('currentUser');
+    const savedUser = localStorage.getItem('taskflow_current_user');
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
         showDashboard();
     }
-}
-
-function setupSidebarToggle() {
-    const sidebar = document.getElementById('sidebar');
-    const toggleBtn = document.getElementById('sidebarToggle');
-    if (!sidebar || !toggleBtn) return;
-
-    toggleBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-    });
-
-    // Close sidebar when clicking outside (on mobile)
-    document.addEventListener('click', (e) => {
-        if (
-            window.innerWidth <= 600 &&
-            sidebar.classList.contains('open') &&
-            !sidebar.contains(e.target) &&
-            e.target !== toggleBtn
-        ) {
-            sidebar.classList.remove('open');
-        }
-    });
 }
 
 // Setup event listeners
@@ -78,6 +182,13 @@ function setupEventListeners() {
         if (e.key === 'Enter') addTask();
     });
 
+    // Search and filter events
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+    document.getElementById('priorityFilter').addEventListener('change', applyFilters);
+    document.getElementById('statusFilter').addEventListener('change', applyFilters);
+    document.getElementById('dateFilter').addEventListener('change', applyFilters);
+    document.getElementById('clearFilters').addEventListener('click', clearFilters);
+
     // Calendar events
     document.getElementById('prevMonth').addEventListener('click', () => {
         currentDate.setMonth(currentDate.getMonth() - 1);
@@ -97,8 +208,77 @@ function setupEventListeners() {
     document.getElementById('closeEditModal').addEventListener('click', closeEditModal);
     document.getElementById('cancelEdit').addEventListener('click', closeEditModal);
     document.getElementById('editTaskForm').addEventListener('submit', saveEditedTask);
+
+    // Mobile menu events
+    document.getElementById('mobileMenuToggle').addEventListener('click', toggleMobileMenu);
+    document.getElementById('mobileLogout').addEventListener('click', handleLogout);
+
+    // Close mobile menu when clicking nav items
+    document.querySelectorAll('.mobile-nav-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const view = item.dataset.view;
+            switchView(view);
+            closeMobileMenu();
+        });
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 768) {
+            closeMobileMenu();
+        }
+    });
 }
 
+// Logo upload functions
+function triggerLogoUpload() {
+    document.getElementById('logoUpload').click();
+}
+
+function handleLogoUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const imageData = e.target.result;
+            
+            // Update logo images
+            const logoImage = document.getElementById('logoImage');
+            const mobileLogoImage = document.getElementById('mobileLogoImage');
+            const logoText = document.getElementById('logoText');
+            const mobileLogoText = document.getElementById('mobileLogoText');
+            
+            logoImage.src = imageData;
+            mobileLogoImage.src = imageData;
+            logoImage.classList.remove('hidden');
+            mobileLogoImage.classList.remove('hidden');
+            logoText.style.display = 'none';
+            mobileLogoText.style.display = 'none';
+            
+            // Save to user profile
+            db.updateUserProfile(currentUser.id, { logoImage: imageData });
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function loadUserLogo() {
+    const profile = db.getUserProfile(currentUser.id);
+    if (profile && profile.logoImage) {
+        const logoImage = document.getElementById('logoImage');
+        const mobileLogoImage = document.getElementById('mobileLogoImage');
+        const logoText = document.getElementById('logoText');
+        const mobileLogoText = document.getElementById('mobileLogoText');
+        
+        logoImage.src = profile.logoImage;
+        mobileLogoImage.src = profile.logoImage;
+        logoImage.classList.remove('hidden');
+        mobileLogoImage.classList.remove('hidden');
+        logoText.style.display = 'none';
+        mobileLogoText.style.display = 'none';
+    }
+}
 
 // Authentication functions
 function showLoginForm() {
@@ -119,12 +299,11 @@ function handleLogin(e) {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
 
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const user = users.find(u => u.email === email && u.password === password);
+    const user = db.getUserByEmail(email);
 
-    if (user) {
+    if (user && user.password === password) {
         currentUser = user;
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        localStorage.setItem('taskflow_current_user', JSON.stringify(currentUser));
         showSuccess('Login successful!');
         setTimeout(() => {
             showDashboard();
@@ -152,22 +331,17 @@ function handleRegister(e) {
         return;
     }
 
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    if (users.find(u => u.email === email)) {
+    if (db.getUserByEmail(email)) {
         showError('User with this email already exists');
         return;
     }
 
-    const newUser = {
-        id: Date.now(),
+    const newUser = db.createUser({
         name,
         email,
         password,
         darkMode: false
-    };
-
-    users.push(newUser);
-    localStorage.setItem('users', JSON.stringify(users));
+    });
     
     showSuccess('Account created successfully! Please sign in.');
     setTimeout(() => {
@@ -179,7 +353,8 @@ function handleRegister(e) {
 function handleLogout() {
     currentUser = null;
     tasks = [];
-    localStorage.removeItem('currentUser');
+    filteredTasks = [];
+    localStorage.removeItem('taskflow_current_user');
     document.getElementById('authContainer').style.display = 'flex';
     document.getElementById('dashboard').style.display = 'none';
     clearMessages();
@@ -192,17 +367,30 @@ function showDashboard() {
     document.getElementById('dashboard').style.display = 'block';
     loadTasks();
     loadUserSettings();
-    renderTasks();
+    loadUserLogo();
+    applyFilters();
     renderCalendar();
 }
 
 // Navigation
 function switchView(view) {
-    // Update nav items
+    // Update desktop nav items
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
     });
-    document.querySelector(`[data-view="${view}"]`).classList.add('active');
+    const desktopNavItem = document.querySelector(`[data-view="${view}"]`);
+    if (desktopNavItem) {
+        desktopNavItem.classList.add('active');
+    }
+
+    // Update mobile nav items
+    document.querySelectorAll('.mobile-nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    const mobileNavItem = document.querySelector(`.mobile-nav-item[data-view="${view}"]`);
+    if (mobileNavItem) {
+        mobileNavItem.classList.add('active');
+    }
 
     // Show/hide views
     document.querySelectorAll('.view').forEach(viewEl => {
@@ -220,12 +408,7 @@ function switchView(view) {
 
 // Task management
 function loadTasks() {
-    const savedTasks = localStorage.getItem(`tasks_${currentUser.id}`);
-    tasks = savedTasks ? JSON.parse(savedTasks) : [];
-}
-
-function saveTasks() {
-    localStorage.setItem(`tasks_${currentUser.id}`, JSON.stringify(tasks));
+    tasks = db.getUserTasks(currentUser.id);
 }
 
 function addTask() {
@@ -236,18 +419,15 @@ function addTask() {
     const text = input.value.trim();
     if (text === '') return;
 
-    const newTask = {
-        id: Date.now(),
+    const newTask = db.createTask(currentUser.id, {
         title: text,
         completed: false,
         dueDate: dueDateInput.value || null,
-        priority: prioritySelect.value,
-        createdAt: new Date().toISOString()
-    };
+        priority: prioritySelect.value
+    });
 
     tasks.unshift(newTask);
-    saveTasks();
-    renderTasks();
+    applyFilters();
     
     // Clear inputs
     input.value = '';
@@ -258,9 +438,10 @@ function addTask() {
 function toggleTask(id) {
     const task = tasks.find(t => t.id === id);
     if (task) {
-        task.completed = !task.completed;
-        saveTasks();
-        renderTasks();
+        const updatedTask = db.updateTask(id, { completed: !task.completed });
+        const taskIndex = tasks.findIndex(t => t.id === id);
+        tasks[taskIndex] = updatedTask;
+        applyFilters();
         if (currentView === 'calendar') {
             renderCalendar();
         }
@@ -269,9 +450,9 @@ function toggleTask(id) {
 
 function deleteTask(id) {
     if (confirm('Are you sure you want to delete this task?')) {
+        db.deleteTask(id);
         tasks = tasks.filter(t => t.id !== id);
-        saveTasks();
-        renderTasks();
+        applyFilters();
         if (currentView === 'calendar') {
             renderCalendar();
         }
@@ -299,12 +480,16 @@ function saveEditedTask(e) {
     
     const task = tasks.find(t => t.id === editingTaskId);
     if (task) {
-        task.title = document.getElementById('editTaskTitle').value;
-        task.dueDate = document.getElementById('editTaskDueDate').value || null;
-        task.priority = document.getElementById('editTaskPriority').value;
+        const updatedTask = db.updateTask(editingTaskId, {
+            title: document.getElementById('editTaskTitle').value,
+            dueDate: document.getElementById('editTaskDueDate').value || null,
+            priority: document.getElementById('editTaskPriority').value
+        });
         
-        saveTasks();
-        renderTasks();
+        const taskIndex = tasks.findIndex(t => t.id === editingTaskId);
+        tasks[taskIndex] = updatedTask;
+        
+        applyFilters();
         if (currentView === 'calendar') {
             renderCalendar();
         }
@@ -312,15 +497,92 @@ function saveEditedTask(e) {
     }
 }
 
+// Search and filter functions
+function applyFilters() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const priorityFilter = document.getElementById('priorityFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+    const dateFilter = document.getElementById('dateFilter').value;
+
+    filteredTasks = tasks.filter(task => {
+        // Search filter
+        const matchesSearch = task.title.toLowerCase().includes(searchTerm);
+        
+        // Priority filter
+        const matchesPriority = !priorityFilter || task.priority === priorityFilter;
+        
+        // Status filter
+        let matchesStatus = true;
+        if (statusFilter === 'completed') {
+            matchesStatus = task.completed;
+        } else if (statusFilter === 'pending') {
+            matchesStatus = !task.completed && (!task.dueDate || new Date(task.dueDate) >= new Date());
+        } else if (statusFilter === 'overdue') {
+            matchesStatus = !task.completed && task.dueDate && new Date(task.dueDate) < new Date();
+        }
+        
+        // Date filter
+        let matchesDate = true;
+        if (dateFilter && task.dueDate) {
+            const taskDate = new Date(task.dueDate);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (dateFilter === 'today') {
+                matchesDate = taskDate.toDateString() === today.toDateString();
+            } else if (dateFilter === 'week') {
+                const weekFromNow = new Date(today);
+                weekFromNow.setDate(today.getDate() + 7);
+                matchesDate = taskDate >= today && taskDate <= weekFromNow;
+            } else if (dateFilter === 'month') {
+                const monthFromNow = new Date(today);
+                monthFromNow.setMonth(today.getMonth() + 1);
+                matchesDate = taskDate >= today && taskDate <= monthFromNow;
+            }
+        } else if (dateFilter) {
+            matchesDate = false;
+        }
+        
+        return matchesSearch && matchesPriority && matchesStatus && matchesDate;
+    });
+
+    updateFilterResults();
+    renderTasks();
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('priorityFilter').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('dateFilter').value = '';
+    applyFilters();
+}
+
+function updateFilterResults() {
+    const resultsEl = document.getElementById('filterResults');
+    const totalTasks = tasks.length;
+    const filteredCount = filteredTasks.length;
+    
+    if (filteredCount === totalTasks) {
+        resultsEl.textContent = `Showing all ${totalTasks} tasks`;
+    } else {
+        resultsEl.textContent = `Showing ${filteredCount} of ${totalTasks} tasks`;
+    }
+}
+
 function renderTasks() {
     const container = document.getElementById('tasksContainer');
     
-    if (tasks.length === 0) {
-        container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); font-style: italic; margin-top: 50px;">No tasks yet. Add one above to get started!</div>';
+    if (filteredTasks.length === 0) {
+        if (tasks.length === 0) {
+            container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); font-style: italic; margin-top: 50px;">No tasks yet. Add one above to get started!</div>';
+        } else {
+            container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); font-style: italic; margin-top: 50px;">No tasks match your current filters.</div>';
+        }
         return;
     }
 
-    container.innerHTML = tasks.map(task => {
+    container.innerHTML = filteredTasks.map(task => {
         const dueDate = task.dueDate ? new Date(task.dueDate) : null;
         const isOverdue = dueDate && dueDate < new Date() && !task.completed;
         
@@ -410,7 +672,9 @@ function renderCalendar() {
 function loadUserSettings() {
     document.getElementById('profileName').value = currentUser.name;
     document.getElementById('profileEmail').value = currentUser.email;
-    document.getElementById('darkModeToggle').checked = currentUser.darkMode || false;
+    
+    const profile = db.getUserProfile(currentUser.id);
+    document.getElementById('darkModeToggle').checked = (profile && profile.darkMode) || currentUser.darkMode || false;
 }
 
 function updateProfile(e) {
@@ -420,17 +684,9 @@ function updateProfile(e) {
     const email = document.getElementById('profileEmail').value;
 
     // Update current user
-    currentUser.name = name;
-    currentUser.email = email;
-
-    // Update in users array
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const userIndex = users.findIndex(u => u.id === currentUser.id);
-    if (userIndex !== -1) {
-        users[userIndex] = currentUser;
-        localStorage.setItem('users', JSON.stringify(users));
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-    }
+    const updatedUser = db.updateUser(currentUser.id, { name, email });
+    currentUser = updatedUser;
+    localStorage.setItem('taskflow_current_user', JSON.stringify(currentUser));
 
     showSuccess('Profile updated successfully!');
     setTimeout(() => {
@@ -439,10 +695,11 @@ function updateProfile(e) {
 }
 
 function initializeDarkMode() {
-    const savedUser = localStorage.getItem('currentUser');
+    const savedUser = localStorage.getItem('taskflow_current_user');
     if (savedUser) {
         const user = JSON.parse(savedUser);
-        if (user.darkMode) {
+        const profile = db.getUserProfile(user.id);
+        if ((profile && profile.darkMode) || user.darkMode) {
             document.documentElement.setAttribute('data-theme', 'dark');
         }
     }
@@ -458,14 +715,7 @@ function toggleDarkMode() {
     }
 
     // Update user preference
-    currentUser.darkMode = isDark;
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const userIndex = users.findIndex(u => u.id === currentUser.id);
-    if (userIndex !== -1) {
-        users[userIndex] = currentUser;
-        localStorage.setItem('users', JSON.stringify(users));
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-    }
+    db.updateUserProfile(currentUser.id, { darkMode: isDark });
 }
 
 // Utility functions
@@ -497,4 +747,21 @@ function escapeHtml(text) {
 function formatDate(dateString) {
     const date = new Date(dateString);
     return date.toLocaleDateString();
+}
+
+// Mobile menu functions
+function toggleMobileMenu() {
+    const mobileNav = document.getElementById('mobileNav');
+    const toggle = document.getElementById('mobileMenuToggle');
+    
+    mobileNav.classList.toggle('show');
+    toggle.classList.toggle('active');
+}
+
+function closeMobileMenu() {
+    const mobileNav = document.getElementById('mobileNav');
+    const toggle = document.getElementById('mobileMenuToggle');
+    
+    mobileNav.classList.remove('show');
+    toggle.classList.remove('active');
 }
