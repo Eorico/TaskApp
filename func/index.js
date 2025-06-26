@@ -169,7 +169,16 @@ function setupMobileCollapsibles() {
     });
 
     // Reset state on resize
-    window.addEventListener('resize', setInitialState);
+    window.addEventListener('resize', function() {
+        if (
+            document.activeElement &&
+            (searchSection.contains(document.activeElement) || addSection.contains(document.activeElement)) &&
+            (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')
+        ) {
+            return;
+        }
+        setInitialState();
+    });
 }
 // Check authentication status
 function checkAuthStatus() {
