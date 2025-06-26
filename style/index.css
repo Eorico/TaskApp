@@ -334,6 +334,7 @@ body {
     flex: 1;
     padding: 30px;
     overflow-y: auto;
+    min-height: 0;
 }
 
 /* Search and Filter Section */
@@ -455,6 +456,9 @@ body {
 .tasks-container {
     display: grid;
     gap: 15px;
+    overflow-y: auto;
+    max-height: 50vh;
+    height: 100%;
 }
 
 .task-item {
@@ -870,6 +874,42 @@ input:checked + .slider:before {
     background: #c82333;
 }
 
+.mobile-collapsible {
+    display: none;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s cubic-bezier(.4,0,.2,1);
+    margin-bottom: 10px;
+}
+.mobile-collapsible.expanded {
+    display: block;
+    max-height: 1000px; 
+    transition: max-height 0.5s cubic-bezier(.4,0,.2,1);
+}
+
+.mobile-collapsible-toggle {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--sidebar-bg);
+    padding: 14px 18px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+}
+.mobile-collapsible-toggle i {
+    margin-left: 10px;
+    transition: transform 0.3s;
+}
+.mobile-collapsible-toggle.active i {
+    transform: rotate(180deg);
+}
+
 @media (max-width: 768px) {
     .dashboard-container {
         flex-direction: column;
@@ -877,6 +917,20 @@ input:checked + .slider:before {
     
     .mobile-header {
         display: flex;
+    }
+
+    .mobile-collapsible-toggle {
+        display: flex;
+    }
+    .mobile-collapsible {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s cubic-bezier(.4,0,.2,1);
+        margin-bottom: 10px;
+    }
+    .mobile-collapsible.expanded {
+        max-height: 1000px; /* Large enough for content */
+        transition: max-height 0.5s cubic-bezier(.4,0,.2,1);
     }
 
     .mobile-nav {
@@ -890,6 +944,40 @@ input:checked + .slider:before {
     .main-content {
         width: 100%;
         margin-left: 0;
+    }
+
+     .content-body {
+        padding: 20px 15px;
+        min-height: 0;  
+    }
+    .tasks-container {
+        display: grid;
+        gap: 10px;
+        max-height: 100vh;
+        /* Remove flex-direction: column or similar overrides */
+    }
+    .task-item {
+        padding: 10px 8px;
+        font-size: 15px;
+    }
+    .task-header {
+        gap: 8px;
+        flex-wrap: nowrap;
+    }
+    .task-title {
+        font-size: 16px;
+    }
+    .task-meta {
+        gap: 10px;
+        font-size: 12px;
+        flex-direction: row;
+        align-items: center;
+    }
+    .task-actions {
+        gap: 6px;
+        margin-top: 0;
+        width: auto;
+        justify-content: flex-end;
     }
 
     .content-header {
@@ -1002,11 +1090,19 @@ input:checked + .slider:before {
     }
 
     .task-item {
-        padding: 12px;
+        padding: 7px 4px;
+        font-size: 13px;
     }
-
     .task-title {
-        font-size: 16px;
+        font-size: 14px;
+    }
+    .task-meta {
+        font-size: 11px;
+        gap: 6px;
+    }
+    .task-btn {
+        font-size: 11px;
+        padding: 4px 8px;
     }
 
     .settings-section {

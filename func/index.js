@@ -137,8 +137,40 @@ document.addEventListener('DOMContentLoaded', function() {
     checkAuthStatus();
     setupEventListeners();
     initializeDarkMode();
+    setupMobileCollapsibles();
 });
+function setupMobileCollapsibles() {
+    const toggleSearch = document.getElementById('toggleSearchFilter');
+    const searchSection = document.getElementById('searchFilterSection');
+    const toggleAdd = document.getElementById('toggleAddTask');
+    const addSection = document.getElementById('addTaskSection');
 
+    // Default: expanded on desktop, collapsed on mobile
+    function setInitialState() {
+        if (window.innerWidth <= 768) {
+            searchSection.classList.remove('expanded');
+            addSection.classList.remove('expanded');
+            toggleSearch.classList.remove('active');
+            toggleAdd.classList.remove('active');
+        } else {
+            searchSection.classList.add('expanded');
+            addSection.classList.add('expanded');
+        }
+    }
+    setInitialState();
+
+    toggleSearch.addEventListener('click', function() {
+        searchSection.classList.toggle('expanded');
+        toggleSearch.classList.toggle('active');
+    });
+    toggleAdd.addEventListener('click', function() {
+        addSection.classList.toggle('expanded');
+        toggleAdd.classList.toggle('active');
+    });
+
+    // Reset state on resize
+    window.addEventListener('resize', setInitialState);
+}
 // Check authentication status
 function checkAuthStatus() {
     const savedUser = localStorage.getItem('taskflow_current_user');

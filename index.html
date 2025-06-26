@@ -151,6 +151,11 @@
                     </div>
                     <div class="content-body">
                         <!-- Search and Filter Section -->
+                        <div class="mobile-collapsible-toggle" id="toggleSearchFilter">
+                            <span>Search & Filter</span>
+                            <i class="fa fa-chevron-down"></i>
+                        </div>
+                        <div class="search-filter-section mobile-collapsible" id="searchFilterSection">
                         <div class="search-filter-section">
                             <div class="search-filter-row">
                                 <input type="text" id="searchInput" class="search-input" placeholder="Search tasks...">
@@ -178,18 +183,25 @@
                                 Showing all tasks
                             </div>
                         </div>
+                        </div>
 
+                        <div class="mobile-collapsible-toggle" id="toggleAddTask">
+                            <span>Add Task</span>
+                            <i class="fa fa-chevron-down"></i>
+                        </div>
+                        <div class="add-task-form mobile-collapsible" id="addTaskSection">
                         <div class="add-task-form">
                             <div class="task-input-group">
                                 <input type="text" id="taskInput" class="task-input" placeholder="Add a new task..." maxlength="100">
                                 <input type="date" id="taskDueDate" class="task-input date-input">
                                 <select id="taskPriority" class="priority-select">
-                                    <option value="low">Low</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="high">High</option>
+                                    <option value="low">Least Important</option>
+                                    <option value="medium">Important</option>
+                                    <option value="high">Most Important</option>
                                 </select>
                                 <button id="addTaskBtn" class="add-task-btn">Add Task</button>
                             </div>
+                        </div>
                         </div>
                         <div class="tasks-container" id="tasksContainer">
                             <!-- Tasks will be rendered here -->
