@@ -5,4 +5,5 @@ functionalities:
 - Calendar that shows your due dates
 - Settings that you can edit your personal information
 - Add list and search filter.
+
 https://eorico.github.io/TaskApp/
