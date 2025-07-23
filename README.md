@@ -7,3 +7,4 @@ functionalities:
 - Add list and search filter.
 
 https://eorico.github.io/TaskApp/
+![My Image](https://github.com/Eorico/PortFolioEo/blob/main/TodoApp.png)
